@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- Agregar el ImageView para el logotipo -->
+    <ImageView
+        android:layout_width="181dp"
+        android:layout_height="196dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="100dp"
+        android:src="@mipmap/ic_launcher" />
+
+    <!-- EditText para el correo electrónico -->
+    <EditText
+        android:id="@+id/editTextEmailRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Correo electrónico"
+        android:inputType="textEmailAddress" />
+
+    <!-- EditText para la contraseña -->
+    <EditText
+        android:id="@+id/editTextPasswordRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contraseña"
+        android:inputType="textPassword" />
+
+    <!-- Botón de Registrarse -->
+    <Button
+        android:id="@+id/buttonRegister"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Registrarse"
+        android:layout_marginTop="16dp" />
+
+    <!-- Texto para Iniciar Sesión -->
+    <TextView
+        android:id="@+id/textViewLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="¿Ya tienes cuenta? Inicia sesión aquí"
+        android:clickable="true"
+        android:textColor="#0000FF"
+        android:gravity="center"
+        android:layout_marginTop="16dp" />
+</LinearLayout>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <!-- Agregar el ImageView para el logotipo -->
+    <ImageView
+        android:layout_width="181dp"
+        android:layout_height="196dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="100dp"
+        android:src="@mipmap/ic_launcher" />
+
+    <!-- EditText para el correo electrónico -->
+    <EditText
+        android:id="@+id/editTextEmailLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Correo electrónico"
+        android:inputType="textEmailAddress" />
+
+    <!-- EditText para la contraseña -->
+    <EditText
+        android:id="@+id/editTextPasswordLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Contraseña"
+        android:inputType="textPassword" />
+
+    <!-- Botón de Iniciar Sesión -->
+    <Button
+        android:id="@+id/buttonLogin"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Iniciar Sesión"
+        android:layout_marginTop="16dp" />
+
+    <!-- Texto para Crear Cuenta -->
+    <TextView
+        android:id="@+id/textViewCreateAccount"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="¿No tienes cuenta? Crea una aquí"
+        android:clickable="true"
+        android:textColor="#0000FF"
+        android:gravity="center"
+        android:layout_marginTop="16dp" />
+</LinearLayout>
+
+
