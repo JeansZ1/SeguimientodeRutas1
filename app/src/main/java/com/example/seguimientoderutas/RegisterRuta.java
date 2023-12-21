@@ -49,6 +49,22 @@ public class RegisterRuta extends AppCompatActivity {
 
         Button buttonStartRoute = findViewById(R.id.buttonStartRoute);
         Button buttonStopRoute = findViewById(R.id.buttonStopRoute);
+        EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
+        double latitude = getIntent().getDoubleExtra("latitude", 0.0);
+        double longitude = getIntent().getDoubleExtra("longitude", 0.0);
+        String location = "Latitud: " + latitude + ", Longitud: " + longitude;
+        editTextSelectDestination.setText(location);
+
+        // Cambiado: Utilizando EditText en lugar de Button
+        EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
+        editTextSelectRoute.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Lógica para seleccionar la ruta aquí
+                Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
+                startActivityForResult(intent, MAP_ACTIVITY_REQUEST_CODE);
+            }
+        });
 
         buttonStartRoute.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,16 +86,6 @@ public class RegisterRuta extends AppCompatActivity {
                 Toast.makeText(RegisterRuta.this, "Registro de ruta detenido", Toast.LENGTH_SHORT).show();
             }
         });
-
-        EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
-        double latitude = getIntent().getDoubleExtra("latitude", 0.0);
-        double longitude = getIntent().getDoubleExtra("longitude", 0.0);
-        String location = "Latitud: " + latitude + ", Longitud: " + longitude;
-        editTextSelectDestination.setText(location);
-
-        // En algún método donde se inicia MapActivity para seleccionar la ubicación
-        Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
-        startActivityForResult(intent, MAP_ACTIVITY_REQUEST_CODE);
     }
 
     @Override
