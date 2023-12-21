@@ -85,9 +85,38 @@ public class RegisterRuta extends AppCompatActivity {
                 buttonStopRoute.setVisibility(View.VISIBLE);
                 isRecording = true;
                 Toast.makeText(RegisterRuta.this, "Registrando ruta...", Toast.LENGTH_SHORT).show();
-                // Lógica para iniciar la grabación de la ruta (puedes integrar aquí la captura de coordenadas y Firebase)
+
+                EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
+                EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
+
+                String destination = editTextSelectDestination.getText().toString().trim();
+                String route = editTextSelectRoute.getText().toString().trim();
+
+                if (!destination.isEmpty() && !route.isEmpty()) {
+                    // Ambos campos están llenos, guardar la ruta
+                    // Obtener las coordenadas de editTextSelectRoute
+                    String[] routeCoords = route.split(", ");
+                    double selectedRouteLatitude = Double.parseDouble(routeCoords[0].substring(9));
+                    double selectedRouteLongitude = Double.parseDouble(routeCoords[1].substring(11));
+
+                    // Obtener las coordenadas de editTextSelectDestination
+                    String[] destinationCoords = destination.split(", ");
+                    double selectedDestinationLatitude = Double.parseDouble(destinationCoords[0].substring(9));
+                    double selectedDestinationLongitude = Double.parseDouble(destinationCoords[1].substring(11));
+
+                    // Obtener la fecha y hora actual
+                    String fechaHora = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
+
+                    guardarRutaEnFirebase(selectedDestinationLatitude, selectedDestinationLongitude,
+                            selectedRouteLatitude, selectedRouteLongitude, fechaHora);
+                } else {
+                    // Uno o ambos campos están vacíos
+                    Toast.makeText(RegisterRuta.this, "Por favor, selecciona destino y ruta", Toast.LENGTH_SHORT).show();
+                }
             }
         });
+
+
 
         buttonStopRoute.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -116,7 +145,8 @@ public class RegisterRuta extends AppCompatActivity {
             SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
             String fechaHora = dateFormat.format(new Date());
 
-            guardarRutaEnFirebase(selectedLatitude, selectedLongitude, fechaHora);
+            // Corregir la llamada al método
+            guardarRutaEnFirebase(0.0, 0.0, selectedLatitude, selectedLongitude, fechaHora);
         } else if (requestCode == DESTINATION_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             // Manejar el resultado del mapa para la selección del destino (editTextSelectDestination)
             double selectedLatitude = data.getDoubleExtra("selectedLatitude", 0.0);
@@ -127,6 +157,7 @@ public class RegisterRuta extends AppCompatActivity {
             editTextSelectDestination.setText(location);
         }
     }
+
 
     private void getLocation() {
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -152,16 +183,18 @@ public class RegisterRuta extends AppCompatActivity {
         }
     }
 
-    private void guardarRutaEnFirebase(double selectedLatitude, double selectedLongitude, String fechaHora) {
+    private void guardarRutaEnFirebase(double selectedDestinationLatitude, double selectedDestinationLongitude,
+                                       double selectedRouteLatitude, double selectedRouteLongitude, String fechaHora) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference routesRef = database.getReference("Rutas");
 
         String nuevaRutaKey = routesRef.push().getKey();
 
         Route nuevaRuta = new Route();
-        nuevaRuta.setPuntoPartida("Punto de partida");
-        // Utiliza las coordenadas de llegada proporcionadas
-        nuevaRuta.setPuntoLlegada("Latitud: " + selectedLatitude + ", Longitud: " + selectedLongitude);
+        // Asignar la ruta a Punto de partida
+        nuevaRuta.setPuntoPartida("Latitud: " + selectedRouteLatitude + ", Longitud: " + selectedRouteLongitude);
+        // Asignar el destino a Punto de llegada
+        nuevaRuta.setPuntoLlegada("Latitud: " + selectedDestinationLatitude + ", Longitud: " + selectedDestinationLongitude);
         nuevaRuta.setFechaHora(fechaHora);
 
         routesRef.child(nuevaRutaKey).setValue(nuevaRuta)
@@ -178,4 +211,7 @@ public class RegisterRuta extends AppCompatActivity {
                     }
                 });
     }
+
 }
+
+
