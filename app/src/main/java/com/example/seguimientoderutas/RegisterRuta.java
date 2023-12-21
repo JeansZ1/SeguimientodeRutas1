@@ -61,10 +61,7 @@ public class RegisterRuta extends AppCompatActivity {
         Button buttonStartRoute = findViewById(R.id.buttonStartRoute);
         Button buttonStopRoute = findViewById(R.id.buttonStopRoute);
         EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
-        double latitude = getIntent().getDoubleExtra("latitude", 0.0);
-        double longitude = getIntent().getDoubleExtra("longitude", 0.0);
-        String location = "Latitud: " + latitude + ", Longitud: " + longitude;
-        editTextSelectDestination.setText(location);
+        editTextSelectDestination.setText("Seleccionar Destino");
 
         EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
         editTextSelectRoute.setOnClickListener(new View.OnClickListener() {
@@ -94,7 +91,7 @@ public class RegisterRuta extends AppCompatActivity {
                 EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
                 String destination = editTextSelectDestination.getText().toString().trim();
 
-                if (!destination.isEmpty() && selectedRouteLatitude != 0.0 && selectedRouteLongitude != 0.0 &&
+                if (!destination.equals("Seleccionar Destino") && selectedRouteLatitude != 0.0 && selectedRouteLongitude != 0.0 &&
                         selectedDestinationLatitude != 0.0 && selectedDestinationLongitude != 0.0) {
 
                     guardarRutaEnFirebase(selectedDestinationLatitude, selectedDestinationLongitude,
