@@ -1,6 +1,11 @@
 package com.example.seguimientoderutas;
 
+import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +16,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -24,6 +30,7 @@ import java.util.Locale;
 public class RegisterRuta extends AppCompatActivity {
 
     private static final int MAP_ACTIVITY_REQUEST_CODE = 1;
+    private static final int DESTINATION_ACTIVITY_REQUEST_CODE = 2;
     private boolean isRecording = false;
 
     @Override
@@ -55,14 +62,19 @@ public class RegisterRuta extends AppCompatActivity {
         String location = "Latitud: " + latitude + ", Longitud: " + longitude;
         editTextSelectDestination.setText(location);
 
-        // Cambiado: Utilizando EditText en lugar de Button
         EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
         editTextSelectRoute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Lógica para seleccionar la ruta aquí
+                getLocation();
+            }
+        });
+
+        editTextSelectDestination.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
-                startActivityForResult(intent, MAP_ACTIVITY_REQUEST_CODE);
+                startActivityForResult(intent, DESTINATION_ACTIVITY_REQUEST_CODE);
             }
         });
 
@@ -93,17 +105,50 @@ public class RegisterRuta extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == MAP_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            // Manejar el resultado del mapa para la ubicación actual (editTextSelectRoute)
+            double selectedLatitude = data.getDoubleExtra("selectedLatitude", 0.0);
+            double selectedLongitude = data.getDoubleExtra("selectedLongitude", 0.0);
+
+            String location = "Latitud: " + selectedLatitude + ", Longitud: " + selectedLongitude;
+            EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
+            editTextSelectRoute.setText(location);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
+            String fechaHora = dateFormat.format(new Date());
+
+            guardarRutaEnFirebase(selectedLatitude, selectedLongitude, fechaHora);
+        } else if (requestCode == DESTINATION_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            // Manejar el resultado del mapa para la selección del destino (editTextSelectDestination)
             double selectedLatitude = data.getDoubleExtra("selectedLatitude", 0.0);
             double selectedLongitude = data.getDoubleExtra("selectedLongitude", 0.0);
 
             String location = "Latitud: " + selectedLatitude + ", Longitud: " + selectedLongitude;
             EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
             editTextSelectDestination.setText(location);
+        }
+    }
 
-            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
-            String fechaHora = dateFormat.format(new Date());
+    private void getLocation() {
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-            guardarRutaEnFirebase(selectedLatitude, selectedLongitude, fechaHora);
+        if (ActivityCompat.checkSelfPermission(RegisterRuta.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(RegisterRuta.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(RegisterRuta.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+            return;
+        }
+
+        Location lastKnownLocation = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+        if (lastKnownLocation != null) {
+            double currentLatitude = lastKnownLocation.getLatitude();
+            double currentLongitude = lastKnownLocation.getLongitude();
+
+            Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
+            intent.putExtra("currentLatitude", currentLatitude);
+            intent.putExtra("currentLongitude", currentLongitude);
+            startActivityForResult(intent, MAP_ACTIVITY_REQUEST_CODE);
+        } else {
+            Toast.makeText(RegisterRuta.this, "No se pudo obtener la ubicación actual", Toast.LENGTH_SHORT).show();
         }
     }
 
