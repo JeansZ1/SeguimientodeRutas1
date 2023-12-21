@@ -42,7 +42,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                     double longitude = selectedLocation.longitude;
 
                     Intent returnIntent = new Intent();
-                    returnIntent.putExtra("selectedLocation", selectedLocation);
+                    returnIntent.putExtra("selectedLatitude", latitude);
+                    returnIntent.putExtra("selectedLongitude", longitude);
                     setResult(RESULT_OK, returnIntent);
                     finish();
                 }

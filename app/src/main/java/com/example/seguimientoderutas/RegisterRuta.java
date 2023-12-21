@@ -23,6 +23,7 @@ import java.util.Locale;
 
 public class RegisterRuta extends AppCompatActivity {
 
+    private static final int MAP_ACTIVITY_REQUEST_CODE = 1;
     private boolean isRecording = false;
 
     @Override
@@ -30,11 +31,9 @@ public class RegisterRuta extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register_ruta);
 
-        // Configurar Toolbar como ActionBar
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Habilitar el botón de navegación hacia atrás
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -69,53 +68,51 @@ public class RegisterRuta extends AppCompatActivity {
                 buttonStartRoute.setVisibility(View.VISIBLE);
                 isRecording = false;
                 Toast.makeText(RegisterRuta.this, "Registro de ruta detenido", Toast.LENGTH_SHORT).show();
-
-                // Obtiene la fecha y hora actual
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
-                Date date = new Date();
-                String fechaHora = dateFormat.format(date);
-
-                // Puedes obtener el punto de llegada de alguna manera, por ejemplo, si se selecciona desde MapActivity
-                String puntoLlegada = "Tu punto de llegada seleccionado";
-
-                guardarRutaEnFirebase(puntoLlegada, fechaHora);
             }
         });
 
-        // Manejo del clic en editTextSelectDestination
         EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
-        editTextSelectDestination.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Inicia MapActivity para seleccionar la ubicación
-                Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
-                startActivity(intent);
-            }
-        });
-
         double latitude = getIntent().getDoubleExtra("latitude", 0.0);
         double longitude = getIntent().getDoubleExtra("longitude", 0.0);
-
-        editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
         String location = "Latitud: " + latitude + ", Longitud: " + longitude;
         editTextSelectDestination.setText(location);
+
+        // En algún método donde se inicia MapActivity para seleccionar la ubicación
+        Intent intent = new Intent(RegisterRuta.this, MapActivity.class);
+        startActivityForResult(intent, MAP_ACTIVITY_REQUEST_CODE);
     }
 
-    private void guardarRutaEnFirebase(String puntoLlegada, String fechaHora) {
-        // Obtener la referencia a la base de datos de Firebase
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == MAP_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
+            double selectedLatitude = data.getDoubleExtra("selectedLatitude", 0.0);
+            double selectedLongitude = data.getDoubleExtra("selectedLongitude", 0.0);
+
+            String location = "Latitud: " + selectedLatitude + ", Longitud: " + selectedLongitude;
+            EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
+            editTextSelectDestination.setText(location);
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.getDefault());
+            String fechaHora = dateFormat.format(new Date());
+
+            guardarRutaEnFirebase(selectedLatitude, selectedLongitude, fechaHora);
+        }
+    }
+
+    private void guardarRutaEnFirebase(double selectedLatitude, double selectedLongitude, String fechaHora) {
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference routesRef = database.getReference("Rutas");
 
-        // Generar una clave única para la nueva ruta
         String nuevaRutaKey = routesRef.push().getKey();
 
-        // Crear un objeto Route con los detalles de la ruta
         Route nuevaRuta = new Route();
         nuevaRuta.setPuntoPartida("Punto de partida");
-        nuevaRuta.setPuntoLlegada(puntoLlegada);
+        // Utiliza las coordenadas de llegada proporcionadas
+        nuevaRuta.setPuntoLlegada("Latitud: " + selectedLatitude + ", Longitud: " + selectedLongitude);
         nuevaRuta.setFechaHora(fechaHora);
 
-        // Guardar la nueva ruta en la base de datos en la ubicación "Rutas/ID_Ruta_generada"
         routesRef.child(nuevaRutaKey).setValue(nuevaRuta)
                 .addOnSuccessListener(new OnSuccessListener<Void>() {
                     @Override
