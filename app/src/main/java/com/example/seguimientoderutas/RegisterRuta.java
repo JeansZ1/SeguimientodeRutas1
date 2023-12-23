@@ -1,12 +1,12 @@
 package com.example.seguimientoderutas;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,7 +16,6 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -60,10 +59,28 @@ public class RegisterRuta extends AppCompatActivity {
 
         Button buttonStartRoute = findViewById(R.id.buttonStartRoute);
         Button buttonStopRoute = findViewById(R.id.buttonStopRoute);
+        @SuppressLint({"MissingInflatedId", "LocalSuppress"}) Button buttonClear = findViewById(R.id.buttonClear);
+        buttonClear.setEnabled(false); // Inicialmente deshabilitar el botón Limpiar
+
+        // Restaurar el estado del botón 'Detener Ruta' desde SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("EstadoRegistro", Context.MODE_PRIVATE);
+        isRecording = sharedPreferences.getBoolean("isRecording", false);
+
+        if (isRecording) {
+            buttonStartRoute.setVisibility(View.GONE);
+            buttonStopRoute.setVisibility(View.VISIBLE);
+            // Habilitar el botón de limpiar si la grabación está activa
+            buttonClear.setEnabled(true);
+        } else {
+            buttonStopRoute.setVisibility(View.GONE);
+            buttonStartRoute.setVisibility(View.VISIBLE);
+        }
+
         EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
+        EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
+
         editTextSelectDestination.setText("Seleccionar Destino");
 
-        EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
         editTextSelectRoute.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,9 +103,9 @@ public class RegisterRuta extends AppCompatActivity {
                 buttonStartRoute.setVisibility(View.GONE);
                 buttonStopRoute.setVisibility(View.VISIBLE);
                 isRecording = true;
+                buttonClear.setEnabled(true); // Habilitar el botón Limpiar
                 Toast.makeText(RegisterRuta.this, "Registrando ruta...", Toast.LENGTH_SHORT).show();
 
-                EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
                 String destination = editTextSelectDestination.getText().toString().trim();
 
                 if (!destination.equals("Seleccionar Destino") && selectedRouteLatitude != 0.0 && selectedRouteLongitude != 0.0 &&
@@ -110,8 +127,77 @@ public class RegisterRuta extends AppCompatActivity {
                 buttonStartRoute.setVisibility(View.VISIBLE);
                 isRecording = false;
                 Toast.makeText(RegisterRuta.this, "Registro de ruta detenido", Toast.LENGTH_SHORT).show();
+
+                // Habilitar el botón de limpiar
+                buttonClear.setEnabled(true);
             }
         });
+
+        // Restaurar las ubicaciones desde SharedPreferences
+        SharedPreferences ubicacionesSharedPreferences = getSharedPreferences("Ubicaciones", Context.MODE_PRIVATE);
+        selectedRouteLatitude = Double.longBitsToDouble(ubicacionesSharedPreferences.getLong("routeLatitude", 0));
+        selectedRouteLongitude = Double.longBitsToDouble(ubicacionesSharedPreferences.getLong("routeLongitude", 0));
+        selectedDestinationLatitude = Double.longBitsToDouble(ubicacionesSharedPreferences.getLong("destinationLatitude", 0));
+        selectedDestinationLongitude = Double.longBitsToDouble(ubicacionesSharedPreferences.getLong("destinationLongitude", 0));
+
+        // Actualizar los EditText con las ubicaciones restauradas
+        editTextSelectRoute.setText("Latitud: " + selectedRouteLatitude + ", Longitud: " + selectedRouteLongitude);
+        editTextSelectDestination.setText("Latitud: " + selectedDestinationLatitude + ", Longitud: " + selectedDestinationLongitude);
+
+        // Agregar TextChangedListeners para habilitar/deshabilitar el botón Limpiar según el contenido de los EditText
+        editTextSelectRoute.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().isEmpty() || !editTextSelectDestination.getText().toString().isEmpty()) {
+                    buttonClear.setEnabled(true);
+                } else {
+                    buttonClear.setEnabled(false);
+                }
+            }
+        });
+
+        editTextSelectDestination.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (!s.toString().isEmpty() || !editTextSelectRoute.getText().toString().isEmpty()) {
+                    buttonClear.setEnabled(true);
+                } else {
+                    buttonClear.setEnabled(false);
+                }
+            }
+        });
+
+        // Agregar funcionalidad al botón Limpiar
+        buttonClear.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                limpiarCampos();
+                // Deshabilitar el botón después de limpiar
+                buttonClear.setEnabled(false);
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Guardar el estado actual de la grabación en SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("EstadoRegistro", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putBoolean("isRecording", isRecording);
+        editor.apply();
     }
 
     @Override
@@ -128,6 +214,10 @@ public class RegisterRuta extends AppCompatActivity {
 
             selectedRouteLatitude = selectedLatitude;
             selectedRouteLongitude = selectedLongitude;
+
+            // Guardar las ubicaciones en SharedPreferences
+            guardarUbicacionesEnSharedPreferences(selectedRouteLatitude, selectedRouteLongitude,
+                    selectedDestinationLatitude, selectedDestinationLongitude);
         } else if (requestCode == DESTINATION_ACTIVITY_REQUEST_CODE && resultCode == RESULT_OK) {
             double selectedLatitude = data.getDoubleExtra("selectedLatitude", 0.0);
             double selectedLongitude = data.getDoubleExtra("selectedLongitude", 0.0);
@@ -138,7 +228,23 @@ public class RegisterRuta extends AppCompatActivity {
 
             selectedDestinationLatitude = selectedLatitude;
             selectedDestinationLongitude = selectedLongitude;
+
+            // Guardar las ubicaciones en SharedPreferences
+            guardarUbicacionesEnSharedPreferences(selectedRouteLatitude, selectedRouteLongitude,
+                    selectedDestinationLatitude, selectedDestinationLongitude);
         }
+    }
+
+    private void guardarUbicacionesEnSharedPreferences(double routeLatitude, double routeLongitude,
+                                                       double destinationLatitude, double destinationLongitude) {
+        // Guardar las ubicaciones en SharedPreferences
+        SharedPreferences sharedPreferences = getSharedPreferences("Ubicaciones", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putLong("routeLatitude", Double.doubleToRawLongBits(routeLatitude));
+        editor.putLong("routeLongitude", Double.doubleToRawLongBits(routeLongitude));
+        editor.putLong("destinationLatitude", Double.doubleToRawLongBits(destinationLatitude));
+        editor.putLong("destinationLongitude", Double.doubleToRawLongBits(destinationLongitude));
+        editor.apply();
     }
 
     private void guardarRutaEnFirebase(double selectedDestinationLatitude, double selectedDestinationLongitude,
@@ -168,5 +274,16 @@ public class RegisterRuta extends AppCompatActivity {
                         Toast.makeText(RegisterRuta.this, "Error al guardar la ruta en Firebase", Toast.LENGTH_SHORT).show();
                     }
                 });
+    }
+
+    private void limpiarCampos() {
+        EditText editTextSelectDestination = findViewById(R.id.editTextSelectDestination);
+        EditText editTextSelectRoute = findViewById(R.id.editTextSelectRoute);
+
+        editTextSelectDestination.setText("Seleccionar Destino");
+        editTextSelectRoute.setText("");
+
+        // Limpiar las ubicaciones guardadas en SharedPreferences
+        guardarUbicacionesEnSharedPreferences(0.0, 0.0, 0.0, 0.0);
     }
 }

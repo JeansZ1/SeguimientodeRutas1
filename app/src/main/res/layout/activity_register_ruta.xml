@@ -58,5 +58,13 @@
             android:text="Detener Registro"
             android:visibility="gone" />
 
+        <Button
+            android:id="@+id/buttonClear"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Limpiar"
+            android:layout_marginTop="8dp"
+            android:enabled="false" />
+
     </LinearLayout>
 </RelativeLayout>
