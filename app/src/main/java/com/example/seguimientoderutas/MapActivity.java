@@ -103,6 +103,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 .apiKey("AIzaSyCSM-98gpW4_KGOvu0IRd69QdyS7-CdbtE")
                 .build();
 
+
         // Crear una solicitud para obtener la ruta entre el origen y el destino
         com.google.maps.model.LatLng googleOrigin = new com.google.maps.model.LatLng(origin.latitude, origin.longitude);
         com.google.maps.model.LatLng googleDestination = new com.google.maps.model.LatLng(destination.latitude, destination.longitude);
